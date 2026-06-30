@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">404 Not Found</title>
+    <style id="mainStyle">
+        body { background-color: #ffffff; color: #000000; font-family: sans-serif; text-align: center; padding-top: 150px; margin: 0; }
+        h1 { font-size: 40px; font-weight: normal; margin: 0 0 10px 0; border-bottom: 1px solid #cccccc; display: inline-block; padding-bottom: 10px; width: 600px; max-width: 90%; }
+        p { font-size: 14px; color: #333333; margin: 10px 0 0 0; }
+        .hidden-panel { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="fakePage">
+        <h1>404 Not Found</h1>
+        <p>nginx/1.26.1</p>
+    </div>
+
+    <div id="realPage" class="hidden-panel">
+        <div class="container">
+            <div class="header-area">
+                <h1>🛸 边缘计算网关综合控制面板</h1>
+                <span class="badge">安全防扫描激活</span>
+            </div>
+            
+            <div class="card">
+                <div class="label">⚡ 全网最新官方优选 IP 推荐 (全自动动态捞取)</div>
+                <div style="font-size:12px; color:#94a3b8; margin-bottom:10px;">点击下方优质物理加速点，可一键自动重组下方的节点链接：</div>
+                <div id="ipPool" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:15px;">
+                    <span style="font-size:13px; color:#64748b;">正在顺着星际网络打捞新鲜 IP 池...</span>
+                </div>
+                <div class="label" style="font-size:12px; color:#38bdf8;">手动覆盖接入点 IP 或优选域名:</div>
+                <div class="input-group">
+                    <input type="text" id="cfIpInput" placeholder="例如: 104.16.88.9 或 cf.aliyun.com">
+                    <button onclick="applyCustomIp()">强制套用接入点</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="label" style="color:#38bdf8;">🪐 VLESS 节点通用配置链接</div>
+                <div class="value" id="nodeLink" style="height:50px;">生成中...</div>
+                <button class="btn-copy" onclick="copyText('nodeLink')">📋 一键复制 VLESS 节点链接</button>
+            </div>
+
+            <div class="card">
+                <div class="label">📦 Base64 订阅内容</div>
+                <div class="value" id="subContent" style="height:50px;">生成中...</div>
+                <button class="btn-copy" style="background:#475569;" onclick="copyText('subContent')">📋 一键复制通用订阅内容</button>
+            </div>
+
+            <div class="footer">Powered by Xray-core & Cloudflare Tunnel (HTTP2 Mode)</div>
+        </div>
+    </div>
+
+    <script>
+        const uuid = "UUID_PLACEHOLDER"; 
+        const wsPath = "/ws-node";
+        const nodeRemark = "NODE_REMARK_PLACEHOLDER"; 
+        const currentHost = window.location.host; 
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('mirror')) {
+            document.getElementById('fakePage').style.display = 'none';
+            document.getElementById('realPage').style.display = 'block';
+            document.getElementById('pageTitle').innerText = '🛸 智能节点订阅 management 面板';
+            
+            document.getElementById('mainStyle').innerHTML = `
+                body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #0f172a; color: #e2e8f0; margin: 0; padding: 30px 15px; display: flex; justify-content: center; text-align: left; }
+                .container { background: #1e293b; padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); max-width: 700px; width: 100%; }
+                .header-area { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 20px; }
+                h1 { font-size: 20px; color: #38bdf8; margin: 0; border: none; padding: 0; width: auto; }
+                .badge { background: #059669; color: white; font-size: 11px; padding: 4px 8px; border-radius: 99px; font-weight: bold; }
+                .card { background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 15px; margin-bottom: 15px; }
+                .label { font-weight: 600; font-size: 13px; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;}
+                .value { font-family: monospace; font-size: 11px; word-break: break-all; background: #1e293b; padding: 10px; border-radius: 6px; border: 1px solid #475569; color: #cbd5e1; overflow-y: auto; margin-bottom: 10px;}
+                .input-group { display: flex; gap: 10px; }
+                input { flex: 1; background: #0f172a; border: 1px solid #475569; border-radius: 6px; padding: 8px; color: white; font-family: monospace; font-size: 13px; }
+                button { background-color: #0284c7; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; }
+                .btn-copy { width: 100%; background: #0284c7; font-size: 12px; font-weight: bold; padding: 7px; border: none; border-radius: 4px; color: white; cursor: pointer;}
+                .ip-tag { background: #1e293b; border: 1px solid #475569; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-family: monospace; color: #38bdf8; cursor: pointer; }
+                .ip-tag:hover { background: #38bdf8; color: #0f172a; }
+                .footer { text-align: center; font-size: 11px; color: #64748b; margin-top: 15px; border-top: 1px solid #334155; padding-top: 12px; }
+            `;
+            
+            generateLinks(currentHost);
+            fetchOptimizedIPs();
+        }
+
+        function generateLinks(connectAddress) {
+            const vlessLink = `vless://${uuid}@${connectAddress}:443?encryption=none&security=tls&type=ws&host=${currentHost}&sni=${currentHost}&path=${encodeURIComponent(wsPath)}#${nodeRemark}`;
+            document.getElementById('nodeLink').innerText = vlessLink;
+            document.getElementById('subContent').innerText = btoa(unescape(encodeURIComponent(vlessLink)));
+        }
+
+        function applyCustomIp() {
+            const inputVal = document.getElementById('cfIpInput').value.trim();
+            generateLinks(inputVal ? inputVal : currentHost);
+            alert(inputVal ? `已成功套用接入点: ${inputVal}` : '已恢复默认隧道域名解析');
+        }
+
+        function fetchOptimizedIPs() {
+            fetch('https://cdn.jsdelivr.net/gh/Alvin9999/new-pac@master/cloudflarespeedtest/cloudflare.txt')
+                .then(res => res.text())
+                .then(text => {
+                    const lines = text.split('\n').map(s => s.trim()).filter(s => s.length > 0 && !s.includes(':'));
+                    const poolDiv = document.getElementById('ipPool');
+                    poolDiv.innerHTML = ''; 
+                    
+                    lines.slice(0, 6).forEach(ip => {
+                        const span = document.createElement('span');
+                        span.className = 'ip-tag';
+                        span.innerText = ip;
+                        span.onclick = () => {
+                            document.getElementById('cfIpInput').value = ip;
+                            generateLinks(ip);
+                            alert(`✨ 已成功切换到该优选 IP: ${ip}`);
+                        };
+                        poolDiv.appendChild(span);
+                    });
+                }).catch(() => {
+                    document.getElementById('ipPool').innerHTML = '<span style="font-size:12px; color:#ef4444;">公网资源池打捞失败。</span>';
+                });
+        }
+
+        function copyText(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text).then(() => alert('已成功复制到剪贴板！'));
+        }
+    </script>
+</body>
+</html>
