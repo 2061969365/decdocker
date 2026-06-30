@@ -27,7 +27,7 @@ echo "🚇 正在解析云端隧道环境变量..."
 
 if [ -n "$TUNNEL_TOKEN" ]; then
   echo "👉 模式 [A] 激活：检测到 TUNNEL_TOKEN，正在建立官方固定隧道..."
-  /usr/local/bin/cloudflared tunnel --edge-ip-version auto --no-autoupdate --protocol tcp run --token "$TUNNEL_TOKEN" &
+  /usr/local/bin/cloudflared tunnel --edge-ip-version auto --no-autoupdate --protocol http2 run --token "$TUNNEL_TOKEN" &
 
 elif [ -n "$ARGO_AUTH" ] && [ -n "$ARGO_DOMAIN" ]; then
   if [[ "$ARGO_AUTH" =~ TunnelSecret ]]; then
@@ -38,7 +38,7 @@ elif [ -n "$ARGO_AUTH" ] && [ -n "$ARGO_DOMAIN" ]; then
     cat <<EOF > /app/tunnel.yml
 tunnel: $TUNNEL_ID
 credentials-file: /app/tunnel.json
-protocol: tcp
+protocol: http2
 ingress:
   - hostname: $ARGO_DOMAIN
     service: http://localhost:8080
@@ -47,12 +47,12 @@ EOF
     /usr/local/bin/cloudflared tunnel --config /app/tunnel.yml run &
   else
     echo "👉 模式 [B-2] 激活：检测到 Token 形式的 ARGO_AUTH，正在向域名 $ARGO_DOMAIN 绑定大桥..."
-    /usr/local/bin/cloudflared tunnel --edge-ip-version auto --no-autoupdate --protocol tcp run --token "$ARGO_AUTH" &
+    /usr/local/bin/cloudflared tunnel --edge-ip-version auto --no-autoupdate --protocol http2 run --token "$ARGO_AUTH" &
   fi
 
 else
   echo "👉 模式 [C] 激活：未检测到任何固定密钥，正在拉起 TryCloudflare 临时随机隧道..."
-  /usr/local/bin/cloudflared tunnel --edge-ip-version auto --no-autoupdate --protocol tcp --url http://localhost:8080 &
+  /usr/local/bin/cloudflared tunnel --edge-ip-version auto --no-autoupdate --protocol http2 --url http://localhost:8080 &
 fi
 
 while true; do
