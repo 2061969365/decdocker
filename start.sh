@@ -55,6 +55,32 @@ else
   /usr/local/bin/cloudflared tunnel --edge-ip-version auto --no-autoupdate --protocol http2 --url http://localhost:8080 &
 fi
 
+# ======================= 哪吒探针监控 =======================
+NEZHA_SERVER="${NEZHA_SERVER:-}"
+NEZHA_KEY="${NEZHA_KEY:-}"
+NEZHA_TLS="${NEZHA_TLS:-true}"
+
+if [ -n "$NEZHA_SERVER" ] && [ -n "$NEZHA_KEY" ]; then
+    echo "📡 正在启动哪吒探针 (Nezha Agent)..."
+
+    ARCH="amd64"
+    [ "$(uname -m)" = "aarch64" ] && ARCH="arm64"
+
+    NEZHA_BIN="/app/nezha-agent"
+    if [ ! -f "$NEZHA_BIN" ]; then
+        echo "⬇️ 正在下载 nezha-agent (${ARCH})..."
+        curl -sL -o /tmp/nezha.zip "https://github.com/nezhahq/agent/releases/latest/download/nezha-agent_linux_${ARCH}.zip"
+        unzip -o /tmp/nezha.zip -d /app/ && chmod +x "$NEZHA_BIN"
+        rm -f /tmp/nezha.zip
+    fi
+
+    TLS_FLAG=""
+    [ "$NEZHA_TLS" = "true" ] && TLS_FLAG="--tls"
+
+    "$NEZHA_BIN" -s "$NEZHA_SERVER" -p "$NEZHA_KEY" $TLS_FLAG -d &
+    echo "✅ 哪吒探针已启动"
+fi
+
 while true; do
   sleep 15
   

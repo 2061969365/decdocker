@@ -2,7 +2,7 @@ FROM teddysun/xray:latest AS xray-source
 FROM cloudflare/cloudflared:latest AS cf-source
 
 FROM alpine:latest
-RUN apk add --no-cache bash curl busybox-extras
+RUN apk add --no-cache bash curl busybox-extras unzip
 
 WORKDIR /app
 
